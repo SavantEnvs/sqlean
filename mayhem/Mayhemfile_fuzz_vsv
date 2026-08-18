@@ -1,0 +1,8 @@
+project: savantenvs/sqlean
+target: fuzz_vsv
+testsuite:
+  - https://$MAYHEM_DOMAIN/$MAYHEM_PROJECT/$MAYHEM_TARGET/testsuite.tar
+  - file://mayhem/fuzz_vsv/testsuite
+cmds:
+  - cmd: /mayhem/fuzz_vsv
+    libfuzzer: true
