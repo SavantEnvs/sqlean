@@ -34,10 +34,10 @@ For maximum flexibility, you can store time values in their internal representat
 
 Alternatively, you can store time values as a NUMBER (64-bit integer) of seconds (milli-, micro- or nanoseconds) since the Unix epoch (1970-01-01 00:00:00 UTC). In this case, the range of representable dates depends on the unit of time used:
 
--   Seconds: billions of years into the past or future with second precision.
--   Milliseconds: 292 million years before or after 1970 with millisecond precision.
--   Microseconds: years from -290307 to 294246 with microsecond precision.
--   Nanoseconds: years from 1678 to 2262 with nanosecond precision.
+- Seconds: billions of years into the past or future with second precision.
+- Milliseconds: 292 million years before or after 1970 with millisecond precision.
+- Microseconds: years from -290307 to 294246 with microsecond precision.
+- Nanoseconds: years from 1678 to 2262 with nanosecond precision.
 
 Time is always stored and operated in UTC, but you can convert it from/to a specific timezone.
 
@@ -55,8 +55,9 @@ The calendrical calculations always assume a Gregorian calendar, with no leap se
 
 ### NULL handling
 
-All functions with arguments propagate SQL `NULL`: if any argument is `NULL`,
-the function returns `NULL` before validating argument types.
+If any function argument is `NULL`, the result will be `NULL`. This is checked before argument types, so both `time_add(NULL, 'not a duration')` and `time_add('not a time', NULL)` return `NULL` instead of an invalid argument error. Functions that don't take any arguments, like `time_now`, never return `NULL`.
+
+A `CHECK` constraint is satisfied if its expression is `NULL`, so `check (time_get_year(at) >= 2000)` won't reject a `NULL` value.
 
 ## Creating time values
 
@@ -487,9 +488,9 @@ time_compare(t, u)
 
 Compares the time instant t with u:
 
--   if t is before u, it returns -1;
--   if t is after u, it returns +1;
--   if they're the same, it returns 0.
+- if t is before u, it returns -1;
+- if t is after u, it returns +1;
+- if they're the same, it returns 0.
 
 ```sql
 select time_compare(time_now(), time_date(2011, 11, 18));
@@ -529,11 +530,11 @@ Returns the time t plus the duration d. Use negative d to subtract duration. If 
 
 You can use the following duration constants:
 
--   `dur_us()` - 1 microsecond;
--   `dur_ms()` - 1 millisecond;
--   `dur_s()` - 1 second;
--   `dur_m()` - 1 minute;
--   `dur_h()` - 1 hour.
+- `dur_us()` - 1 microsecond;
+- `dur_ms()` - 1 millisecond;
+- `dur_s()` - 1 second;
+- `dur_m()` - 1 minute;
+- `dur_h()` - 1 hour.
 
 ```sql
 select time_fmt_iso(time_add(time_now(), 24*dur_h()));
@@ -854,13 +855,13 @@ date [ sep time [ frac ] [ zone ] ]
 time [ frac ] [ zone ]
 ```
 
-| part   | format                | notes                                     |
-| ------ | --------------------- | ----------------------------------------- |
-| `date` | `2006-01-02`          | year `0000`-`9999`, month and day two digits |
-| `sep`  | `T` or whitespace     | one `T`/`t`, or a run of whitespace       |
-| `time` | `15:04:05`            | two digits each                           |
+| part   | format                   | notes                                            |
+| ------ | ------------------------ | ------------------------------------------------ |
+| `date` | `2006-01-02`             | year `0000`-`9999`, month and day two digits     |
+| `sep`  | `T` or whitespace        | one `T`/`t`, or a run of whitespace              |
+| `time` | `15:04:05`               | two digits each                                  |
 | `frac` | `.` + one or more digits | only the first nine are kept, the rest discarded |
-| `zone` | `Z`, `z` or `+07:00`  | two digits each                           |
+| `zone` | `Z`, `z` or `+07:00`     | two digits each                                  |
 
 All fields are fixed-width, so `2006-1-2` is not a date. RFC 3339 §5.6 allows a
 lowercase `t` and `z`, and both are accepted. As in SQLite, any run of
@@ -882,7 +883,7 @@ other, so all of these are valid:
 Fields are only bounded by their width; `time_date` normalizes whatever they
 hold, as it always has. So `2011-02-30` is the same instant as `2011-03-02`,
 `2006-13-02` means February 2007, `24:00:00` is midnight the next day, and
-`+24:00` shifts by a day. A *malformed* zone is still rejected — `+0500` and
+`+24:00` shifts by a day. A _malformed_ zone is still rejected — `+0500` and
 `+05:xx` are not offsets.
 
 SQL `NULL` propagates. Other values return the zero time (year 1) if they do not
@@ -908,12 +909,12 @@ select time_parse('15:56:35')                            = time_date(1, 1, 1, 15
 
 These functions return durations in nanoseconds:
 
--   `dur_ns()` = 1 nanosecond;
--   `dur_us()` = 1 microsecond = 10³ ns;
--   `dur_ms()` = 1 millisecond = 10⁶ ns;
--   `dur_s()` = 1 second = 10⁹ ns;
--   `dur_m()` = 1 minute = 60\*10⁹ ns;
--   `dur_h()` = 1 hour = 3600\*10⁹ ns.
+- `dur_ns()` = 1 nanosecond;
+- `dur_us()` = 1 microsecond = 10³ ns;
+- `dur_ms()` = 1 millisecond = 10⁶ ns;
+- `dur_s()` = 1 second = 10⁹ ns;
+- `dur_m()` = 1 minute = 60\*10⁹ ns;
+- `dur_h()` = 1 hour = 3600\*10⁹ ns.
 
 ```sql
 select dur_ns();
