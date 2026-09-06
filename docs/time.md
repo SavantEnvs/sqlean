@@ -53,6 +53,11 @@ Duration is a 64-bit number of nanoseconds, so it can represent values up to abo
 
 The calendrical calculations always assume a Gregorian calendar, with no leap seconds.
 
+### NULL handling
+
+All functions with arguments propagate SQL `NULL`: if any argument is `NULL`,
+the function returns `NULL` before validating argument types.
+
 ## Creating time values
 
 There are two basic constructors — one for the current time and one for a specific date/time.

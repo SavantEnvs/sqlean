@@ -375,3 +375,136 @@ select '81_03', t = time_date(2011, 11, 18, 15, 56, 35, 666777888) from data whe
 select '81_04', length(t) = 13 from data where id = 1;
 select '81_05', max(t) = time_date(2011, 11, 18, 15, 56, 35, 666777888) from data;
 select '81_06', min(t) = time_date(2011, 11, 18, 15, 56, 30) from data;
+
+-- null propagation
+-- every argument-taking function returns null if any argument is null
+select '90_01', time_date(null, 11, 18) is null;
+select '90_02', time_date(2011, null, 18) is null;
+select '90_03', time_date(2011, 11, null) is null;
+select '90_04', time_date(2011, 11, 18, null, 56, 35) is null;
+select '90_05', time_date(2011, 11, 18, 15, null, 35) is null;
+select '90_06', time_date(2011, 11, 18, 15, 56, null) is null;
+select '90_07', time_date(2011, 11, 18, 15, 56, 35, null) is null;
+select '90_08', time_date(2011, 11, 18, 15, 56, 35, 0, null) is null;
+select '90_09', time_get_year(null) is null;
+select '90_10', time_get_month(null) is null;
+select '90_11', time_get_day(null) is null;
+select '90_12', time_get_hour(null) is null;
+select '90_13', time_get_minute(null) is null;
+select '90_14', time_get_second(null) is null;
+select '90_15', time_get_nano(null) is null;
+select '90_16', time_get_weekday(null) is null;
+select '90_17', time_get_yearday(null) is null;
+select '90_18', time_get_isoyear(null) is null;
+select '90_19', time_get_isoweek(null) is null;
+select '90_20', time_get(null, 'year') is null;
+select '90_21', time_get(time_unix(1321631795), null) is null;
+select '90_22', time_unix(null) is null;
+select '90_23', time_unix(1321631795, null) is null;
+select '90_24', time_milli(null) is null;
+select '90_25', time_micro(null) is null;
+select '90_26', time_nano(null) is null;
+select '90_27', time_to_unix(null) is null;
+select '90_28', time_to_milli(null) is null;
+select '90_29', time_to_micro(null) is null;
+select '90_30', time_to_nano(null) is null;
+select '90_31', time_after(null, time_unix(1321631795)) is null;
+select '90_32', time_after(time_unix(1321631795), null) is null;
+select '90_33', time_before(null, time_unix(1321631795)) is null;
+select '90_34', time_compare(null, time_unix(1321631795)) is null;
+select '90_35', time_equal(time_unix(1321631795), null) is null;
+select '90_36', time_add(null, dur_h()) is null;
+select '90_37', time_add(time_unix(1321631795), null) is null;
+select '90_38', time_sub(null, time_unix(1321631795)) is null;
+select '90_39', time_sub(time_unix(1321631795), null) is null;
+select '90_40', time_since(null) is null;
+select '90_41', time_until(null) is null;
+select '90_42', time_add_date(null, 1) is null;
+select '90_43', time_add_date(time_unix(1321631795), null) is null;
+select '90_44', time_add_date(time_unix(1321631795), 1, null) is null;
+select '90_45', time_add_date(time_unix(1321631795), 1, 1, null) is null;
+select '90_46', time_trunc(null, 'day') is null;
+select '90_47', time_trunc(time_unix(1321631795), null) is null;
+select '90_48', time_round(null, dur_h()) is null;
+select '90_49', time_round(time_unix(1321631795), null) is null;
+select '90_50', time_fmt_iso(null) is null;
+select '90_51', time_fmt_iso(time_unix(1321631795), null) is null;
+select '90_52', time_fmt_datetime(null) is null;
+select '90_53', time_fmt_date(null) is null;
+select '90_54', time_fmt_time(null) is null;
+select '90_55', time_parse(null) is null;
+
+-- null propagation: postgres compatibility layer
+select '91_01', age(null, time_unix(1321631795)) is null;
+select '91_02', age(time_unix(1321631795), null) is null;
+select '91_03', date_add(null, dur_h()) is null;
+select '91_04', date_add(time_unix(1321631795), null) is null;
+select '91_05', date_part(null, time_unix(1321631795)) is null;
+select '91_06', date_part('year', null) is null;
+select '91_07', date_trunc(null, time_unix(1321631795)) is null;
+select '91_08', date_trunc('day', null) is null;
+select '91_09', make_date(null, 11, 18) is null;
+select '91_10', make_timestamp(2011, 11, 18, 15, 56, null) is null;
+select '91_11', to_timestamp(null) is null;
+
+-- null propagation: functions without arguments are unaffected
+select '92_01', time_now() is not null;
+select '92_02', now() is not null;
+select '92_03', dur_h() = 3600000000000;
+
+-- null propagation: null is checked before types, so it does not depend on
+-- argument order and masks an invalid value in another argument
+select '93_01', time_add(null, 'not a duration') is null;
+select '93_02', time_add('not a time', null) is null;
+select '93_03', time_get(null, 'not a field') is null;
+select '93_04', time_get('not a time', null) is null;
+
+-- null propagation: composes with outer joins and aggregates
+create table t90_users(id integer primary key, name text);
+create table t90_logins(user_id integer, at blob);
+insert into t90_users values (1, 'ann'), (2, 'bob'), (3, 'cid');
+insert into t90_logins values (1, time_date(2024, 1, 15)), (3, time_date(2024, 3, 2));
+select '94_01', count(*) = 3 from (
+    select time_fmt_date(l.at) as d from t90_users u
+    left join t90_logins l on l.user_id = u.id
+);
+select '94_02', count(*) = 2 from (
+    select time_fmt_date(l.at) as d from t90_users u
+    left join t90_logins l on l.user_id = u.id
+) where d is not null;
+select '94_03', max(time_to_unix(l.at)) = time_to_unix(time_date(2024, 3, 2))
+    from t90_users u left join t90_logins l on l.user_id = u.id;
+select '94_04', group_concat(name) = 'cid' from (
+    select u.name from t90_users u
+    left join t90_logins l on l.user_id = u.id
+    where time_after(l.at, time_date(2024, 2, 1))
+);
+
+-- null propagation: a plain expression index covers a nullable column
+create table t90_events(at blob);
+insert into t90_events values (null), (time_date(2024, 1, 15)), (time_date(2024, 3, 2));
+create index t90_events_year on t90_events(time_get_year(at));
+select '95_01', count(*) = 3 from t90_events;
+select '95_02', count(*) = 2 from t90_events where time_get_year(at) = 2024;
+insert into t90_events values (null);
+select '95_03', count(*) = 4 from t90_events;
+
+-- null propagation: generated columns accept a null row
+create table t90_gen(
+    at blob,
+    y integer generated always as (time_get_year(at)) stored,
+    m integer generated always as (time_get_month(at)) virtual
+);
+insert into t90_gen(at) values (null), (time_date(2024, 5, 1));
+select '95_04', count(*) = 2 from t90_gen;
+select '95_05', y is null and m is null from t90_gen where at is null;
+select '95_06', y = 2024 and m = 5 from t90_gen where at is not null;
+
+-- null propagation: a CHECK constraint is satisfied by a null result and does
+-- not reject a null value; NOT NULL requires one
+create table t96_opt(at blob check (time_get_year(at) >= 2000));
+insert into t96_opt values (null), (time_date(2024, 1, 15));
+select '96_01', count(*) = 2 from t96_opt;
+create table t96_req(at blob not null check (time_get_year(at) >= 2000));
+insert or ignore into t96_req values (null), (time_date(2024, 1, 15));
+select '96_02', count(*) = 1 from t96_req;
